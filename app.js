@@ -40,9 +40,48 @@ function loadWelcomeScreen() {
 }
 
 function startJourney() {
-  alert('Next step coming soon!');
+  loadChatScreen();
 }
 
 function showLogin() {
   alert('Login coming soon!');
-    }
+}
+
+function loadChatScreen() {
+  var app = document.getElementById('app');
+
+  app.innerHTML = `
+    <div class="chat-screen">
+
+      <!-- HEADER -->
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <div class="mentor-avatar">M</div>
+          <div class="mentor-info">
+            <h2 class="mentor-name">MentorMe</h2>
+            <p class="mentor-status">● Online — ready to help</p>
+          </div>
+        </div>
+        <div class="chat-header-right">
+          <button class="mode-btn" onclick="showModes()">🎯 Mode</button>
+        </div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="chat-messages" id="chat-messages">
+        <div class="message mentor-message" id="intro-message">
+          <div class="message-bubble" id="intro-bubble"></div>
+        </div>
+      </div>
+
+      <!-- INPUT -->
+      <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+          <textarea 
+            id="user-input" 
+            class="chat-input" 
+            placeholder="Type your message..."
+            rows="1"
+            onkeydown="handleKey(event)"
+            oninput="autoResize(this)"
+          ></
