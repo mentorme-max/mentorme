@@ -46,9 +46,9 @@ html, body {
   gap: 20px;
 }
 
-..splash-logo {
-  width: 220px;
-  height: 100px;
+.splash-logo {
+  width: 280px;
+  height: 160px;
   object-fit: contain;
   animation: gentlePulse 3s ease-in-out infinite;
 }
