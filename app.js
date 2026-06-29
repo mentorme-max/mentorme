@@ -85,3 +85,109 @@ function loadChatScreen() {
             onkeydown="handleKey(event)"
             oninput="autoResize(this)"
           ></
+>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  setTimeout(function() {
+    streamText(
+      'intro-bubble',
+      "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not an assistant. I ask questions, I listen, and I help you figure things out.\n\nBefore we begin, let me ask you something simple.\n\nWhat's been on your mind lately?"
+    );
+  }, 500);
+}
+
+function streamText(elementId, text) {
+  var element = document.getElementById(elementId);
+  if (!element) return;
+  element.innerHTML = '';
+  var index = 0;
+  var speed = 18;
+  function typeNext() {
+    if (index < text.length) {
+      if (text[index] === '\n') {
+        element.innerHTML += '<br>';
+      } else {
+        element.innerHTML += text[index];
+      }
+      index++;
+      setTimeout(typeNext, speed);
+    }
+  }
+  typeNext();
+}
+
+function handleKey(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+}
+
+function sendMessage() {
+  var input = document.getElementById('user-input');
+  var text = input.value.trim();
+  if (!text) return;
+  addMessage(text, 'user');
+  input.value = '';
+  input.style.height = 'auto';
+  setTimeout(function() {
+    showTyping();
+    setTimeout(function() {
+      hideTyping();
+      addMentorMessage("I hear you. That takes courage to say.\n\nTell me more — when did this start feeling this way for you?");
+    }, 2000);
+  }, 300);
+}
+
+function addMessage(text, sender) {
+  var messages = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'message ' + sender + '-message';
+  div.innerHTML = '<div class="message-bubble">' + text + '</div>';
+  messages.appendChild(div);
+  scrollToBottom();
+}
+
+function addMentorMessage(text) {
+  var messages = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'message mentor-message';
+  var bubbleId = 'bubble-' + Date.now();
+  div.innerHTML = '<div class="message-bubble" id="' + bubbleId + '"></div>';
+  messages.appendChild(div);
+  scrollToBottom();
+  streamText(bubbleId, text);
+}
+
+function showTyping() {
+  var messages = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'message mentor-message';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+  messages.appendChild(div);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  var typing = document.getElementById('typing-indicator');
+  if (typing) typing.remove();
+}
+
+function scrollToBottom() {
+  var messages = document.getElementById('chat-messages');
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showModes() {
+  alert('Mentor modes coming soon!');
+             }
