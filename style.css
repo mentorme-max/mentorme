@@ -190,7 +190,7 @@ html, body {
 .chat-header {
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 20px;
   height: 56px;
   min-height: 56px;
   background: var(--bg);
@@ -206,10 +206,9 @@ html, body {
 }
 
 .mentor-avatar-img {
-  width: 32px;
-  height: 32px;
+  width: 110px;
+  height: 36px;
   object-fit: contain;
-  border-radius: 8px;
 }
 
 .mentor-name {
@@ -222,7 +221,7 @@ html, body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 20px 16px 16px;
+  padding: 24px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -287,24 +286,25 @@ html, body {
 .chat-input-area {
   flex-shrink: 0;
   background: var(--bg);
-  padding: 10px 12px 30px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 14px 32px;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .chat-input-wrapper {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
-  background: #334155;
-  border-radius: 28px;
-  padding: 8px 8px 8px 12px;
-  min-height: 52px;
+  background: #243044;
+  border-radius: 30px;
+  padding: 10px 10px 10px 16px;
+  min-height: 54px;
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .input-left-btn {
-  width: 34px;
-  height: 34px;
-  background: rgba(255,255,255,0.1);
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.08);
   border: none;
   border-radius: 50%;
   color: var(--text-muted);
@@ -314,7 +314,6 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-bottom: 1px;
 }
 
 .chat-input {
@@ -329,7 +328,7 @@ html, body {
   max-height: 130px;
   min-height: 24px;
   font-family: inherit;
-  padding: 5px 0;
+  padding: 0;
   align-self: center;
 }
 
@@ -346,13 +345,12 @@ html, body {
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
-  margin-bottom: 1px;
 }
 
 .send-btn {
-  width: 38px;
-  height: 38px;
-  background: #334155;
+  width: 42px;
+  height: 42px;
+  background: var(--accent);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -360,8 +358,9 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--white);
-  font-size: 14px;
+  color: #000;
+  font-size: 16px;
+  font-weight: 700;
   transition: background 0.2s ease;
 }
 
