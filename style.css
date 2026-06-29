@@ -303,6 +303,116 @@ html, body {
   height: 8px;
   background: var(--text-muted);
   border-radius: 50%;
+/* CHAT */
+.chat-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100%;
+  background: var(--bg);
+  overflow: hidden;
+  position: fixed;
+  top: 0; left: 0;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 56px;
+  min-height: 56px;
+  background: var(--bg);
+  border-bottom: 1px solid #334155;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mentor-avatar-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.mentor-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar { display: none; }
+
+.message {
+  display: flex;
+  max-width: 85%;
+}
+
+.mentor-message { align-self: flex-start; }
+.user-message { align-self: flex-end; }
+
+.message-bubble {
+  padding: 14px 18px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.7;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.mentor-message .message-bubble {
+  background: #334155;
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+.user-message .message-bubble {
+  background: var(--accent);
+  color: #0f172a;
+  border-bottom-right-radius: 4px;
+  font-weight: 500;
+}
+
+.typing-indicator-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 4px;
+  align-self: flex-start;
+}
+
+.typing-bubble {
+  background: #334155;
+  padding: 16px 20px;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--text-muted);
+  border-radius: 50%;
   animation: softBounce 1.2s infinite;
   display: inline-block;
 }
@@ -313,7 +423,7 @@ html, body {
 .chat-input-area {
   flex-shrink: 0;
   background: var(--bg);
-  padding: 10px 12px 28px;
+  padding: 10px 12px 30px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 
@@ -321,27 +431,26 @@ html, body {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  background: #243044;
-  border-radius: 26px;
-  padding: 8px 8px 8px 14px;
-  border: 1px solid rgba(255,255,255,0.08);
-  min-height: 50px;
+  background: #334155;
+  border-radius: 28px;
+  padding: 8px 8px 8px 12px;
+  min-height: 52px;
 }
 
 .input-left-btn {
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.08);
+  width: 34px;
+  height: 34px;
+  background: rgba(255,255,255,0.1);
   border: none;
   border-radius: 50%;
   color: var(--text-muted);
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .chat-input {
@@ -349,18 +458,18 @@ html, body {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--text);
+  color: var(--white);
   font-size: 15px;
   line-height: 1.5;
   resize: none;
   max-height: 130px;
   min-height: 24px;
   font-family: inherit;
-  padding: 4px 0;
+  padding: 5px 0;
   align-self: center;
 }
 
-.chat-input::placeholder { color: var(--text-muted); }
+.chat-input::placeholder { color: #64748b; }
 
 .mic-btn {
   width: 34px;
@@ -371,16 +480,15 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  font-size: 19px;
+  font-size: 18px;
   flex-shrink: 0;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .send-btn {
   width: 38px;
   height: 38px;
-  background: var(--accent);
+  background: #334155;
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -388,7 +496,10 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
+  color: var(--white);
+  font-size: 14px;
+  transition: background 0.2s ease;
+  }
 
 /* ANIMATIONS */
 @keyframes gentlePulse {
