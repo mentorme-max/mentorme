@@ -36,6 +36,177 @@ function loadOnboarding() {
   function render() {
     var slide = slides[current];
     var isLast = current === slides.length - 1;
+    var dots = slides.map(function(s, i) {
+      return '<span class="ob-dot ' + (i === current ? 'ob-dot-active' : '') + '"></span>';
+    }).join('');
+    app.innerHTML =
+      '<div class="ob-screen">' +
+        '<div class="ob-skip" onclick="loadWelcomeScreen()">Skip</div>' +
+        '<div class="ob-content">' +
+          '<div class="ob-icon">' + slide.icon + '</div>' +
+          '<h1 class="ob-headline">' + slide.headline + '</h1>' +
+          '<p class="ob-description">' + slide.description + '</p>' +
+        '</div>' +
+        '<div class="ob-footer">' +
+          '<div class="ob-dots">' + dots + '</div>' +
+          '<button class="ob-next-btn" onclick="handleObNext()">' +
+            (isLast ? 'Get Started' : 'Next') +
+          '</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  window.handleObNext = function() {
+    if (current < slides.length - 1) {
+      current++;
+      render();
+    } else {
+      loadWelcomeScreen();
+    }
+  };
+
+  render();
+}
+
+function loadWelcomeScreen() {
+  var app = document.getElementById('app');
+  app.style.overflowY = 'auto';
+  app.style.overflow = 'auto';
+  app.innerHTML =
+    '<div class="welcome-screen">' +
+      '<img src="logo.png" class="welcome-logo" alt="MentorMe" />' +
+      '<p class="welcome-tagline">One honest conversation can change everything.</p>' +
+      '<p class="welcome-subtitle">Your personal AI mentor. Ask questions. Get honest guidance. Move forward.</p>' +
+      '<div class="welcome-features">' +
+        '<div class="feature-item"><span class="feature-icon">🎯</span><span>Finds your real problem</span></div>' +
+        '<div class="feature-item"><span class="feature-icon">💡</span><span>Gives practical advice</span></div>' +
+        '<div class="feature-item"><span class="feature-icon">🧠</span><span>Remembers your journey</span></div>' +
+        '<div class="feature-item"><span class="feature-icon">🌍</span><span>Available anywhere, anytime</span></div>' +
+      '</div>' +
+      '<button class="btn-primary" onclick="loadChatScreen()">Start Free Session</button>' +
+      '<p class="welcome-login">Already have an account? <span class="link" onclick="alert(\'Login coming soon!\')">Sign in</span></p>' +
+    '</div>';
+}
+
+function loadChatScreen() {
+  var app = document.getElementById('app');
+  app.style.overflow = 'hidden';
+  app.innerHTML =
+    '<div class="chat-screen">' +
+      '<div class="chat-header">' +
+        '<div class="chat-header-left">' +
+          '<img src="logo.png" class="mentor-avatar-img" alt="MentorMe" />' +
+          '<div>' +
+            '<h2 class="mentor-name">MentorMe</h2>' +
+            '<p class="mentor-status">&#9679; Online</p>' +
+          '</div>' +
+        '</div>' +
+        '<button class="mode-btn" onclick="alert(\'Modes coming soon!\')">🎯 Mode</button>' +
+      '</div>' +
+      '<div class="chat-messages" id="chat-messages">' +
+        '<div class="message mentor-message">' +
+          '<div class="message-bubble" id="intro-bubble"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="chat-input-area">' +
+        '<div class="chat-input-wrapper">' +
+          '<button class="input-left-btn">+</button>' +
+          '<textarea id="user-input" class="chat-input" placeholder="Reply to MentorMe" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>' +
+          '<button class="mic-btn">🎤</button>' +
+          '<button class="send-btn" onclick="sendMessage()">&#9650;</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  setTimeout(function() {
+    streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not an assistant. I ask questions, I listen, and I help you figure things out.\n\nBefore we begin, let me ask you something simple.\n\nWhat's been on your mind lately?");
+  }, 600);
+}
+
+function streamText(elementId, text) {
+  var element = document.getElementById(elementId);
+  if (!element) return;
+  element.innerHTML = '';
+  var index = 0;
+  function typeNext() {
+    if (index < text.length) {
+      element.innerHTML += text[index] === '\n' ? '<br>' : text[index];
+      index++;
+      scrollToBottom();
+      setTimeout(typeNext, 18);
+    }
+  }
+  typeNext();
+}
+
+function handleKey(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 130) + 'px';
+}
+
+function sendMessage() {
+  var input = document.getElementById('user-input');
+  var text = input.value.trim();
+  if (!text) return;
+  addUserMessage(text);
+  input.value = '';
+  input.style.height = 'auto';
+  setTimeout(function() {
+    showTyping();
+    setTimeout(function() {
+      hideTyping();
+      addMentorMessage("I hear you. That takes courage to say.\n\nTell me more — when did this start feeling this way for you?");
+    }, 2200);
+  }, 400);
+}
+
+function addUserMessage(text) {
+  var messages = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'message user-message';
+  div.innerHTML = '<div class="message-bubble">' + text + '</div>';
+  messages.appendChild(div);
+  scrollToBottom();
+}
+
+function addMentorMessage(text) {
+  var messages = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'message mentor-message';
+  var id = 'bubble-' + Date.now();
+  div.innerHTML = '<div class="message-bubble" id="' + id + '"></div>';
+  messages.appendChild(div);
+  scrollToBottom();
+  streamText(id, text);
+}
+
+function showTyping() {
+  var messages = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'message mentor-message';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+  messages.appendChild(div);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  var el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function scrollToBottom() {
+  var messages = document.getElementById('chat-messages');
+  if (messages) messages.scrollTop = messages.scrollHeight;
+        }    var slide = slides[current];
+    var isLast = current === slides.length - 1;
     var dots = slides.map(function(_, i) {
       return '<span class="ob-dot ' + (i === current ? 'ob-dot-active' : '') + '"></span>';
     }).join('');
