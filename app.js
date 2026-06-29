@@ -77,15 +77,18 @@ function loadChatScreen() {
       <!-- INPUT -->
       <div class="chat-input-area">
         <div class="chat-input-wrapper">
-          <textarea 
-            id="user-input" 
-            class="chat-input" 
-            placeholder="Type your message..."
+          <textarea
+            id="user-input"
+            class="chat-input"
+            placeholder="Share what is on your mind..."
             rows="1"
             onkeydown="handleKey(event)"
             oninput="autoResize(this)"
-          ></
->
+          ></textarea>
+          <button class="mic-btn">🎤</button>
+          <button class="send-btn" onclick="sendMessage()">
+            ➤
+          </button>
         </div>
       </div>
 
