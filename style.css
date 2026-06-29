@@ -23,7 +23,6 @@ html, body {
   overflow: hidden;
 }
 
-/* SPLASH */
 #splash-screen {
   position: fixed;
   top: 0; left: 0;
@@ -51,13 +50,6 @@ html, body {
   height: 160px;
   object-fit: contain;
   animation: gentlePulse 3s ease-in-out infinite;
-}
-
-.splash-brand {
-  font-size: 30px;
-  font-weight: 700;
-  color: var(--white);
-  letter-spacing: 0.5px;
 }
 
 .splash-middle {
@@ -103,7 +95,6 @@ html, body {
   max-width: 260px;
 }
 
-/* APP */
 #app {
   width: 100%;
   height: 100dvh;
@@ -112,7 +103,6 @@ html, body {
   display: none;
 }
 
-/* WELCOME */
 .welcome-screen {
   display: flex;
   flex-direction: column;
@@ -186,124 +176,6 @@ html, body {
   cursor: pointer;
 }
 
-/* CHAT */
-.chat-screen {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  width: 100%;
-  background: var(--bg);
-  overflow: hidden;
-  position: fixed;
-  top: 0; left: 0;
-}
-
-.chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  height: 58px;
-  min-height: 58px;
-  background: var(--bg);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  flex-shrink: 0;
-}
-
-.chat-header-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.mentor-avatar-img {
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.mentor-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--white);
-}
-
-.mentor-status {
-  font-size: 11px;
-  color: var(--accent);
-  margin-top: 1px;
-}
-
-.mode-btn {
-  background: rgba(0,255,136,0.08);
-  border: 1px solid rgba(0,255,136,0.3);
-  color: var(--accent);
-  padding: 7px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 16px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.chat-messages::-webkit-scrollbar { display: none; }
-
-.message {
-  display: flex;
-  max-width: 83%;
-}
-
-.mentor-message { align-self: flex-start; }
-.user-message { align-self: flex-end; }
-
-.message-bubble {
-  padding: 13px 17px;
-  border-radius: 20px;
-  font-size: 15px;
-  line-height: 1.65;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.mentor-message .message-bubble {
-  background: var(--bubble);
-  color: var(--text);
-  border-bottom-left-radius: 5px;
-}
-
-.user-message .message-bubble {
-  background: var(--accent);
-  color: #0f172a;
-  border-bottom-right-radius: 5px;
-  font-weight: 500;
-}
-
-.typing-bubble {
-  background: var(--bubble);
-  padding: 16px 20px;
-  border-radius: 20px;
-  border-bottom-left-radius: 5px;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.typing-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--text-muted);
-  border-radius: 50%;
-/* CHAT */
 .chat-screen {
   display: flex;
   flex-direction: column;
@@ -388,14 +260,6 @@ html, body {
   color: #0f172a;
   border-bottom-right-radius: 4px;
   font-weight: 500;
-}
-
-.typing-indicator-text {
-  font-size: 13px;
-  color: var(--text-muted);
-  font-style: italic;
-  padding: 8px 4px;
-  align-self: flex-start;
 }
 
 .typing-bubble {
@@ -499,24 +363,8 @@ html, body {
   color: var(--white);
   font-size: 14px;
   transition: background 0.2s ease;
-  }
-
-/* ANIMATIONS */
-@keyframes gentlePulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.04); opacity: 0.92; }
 }
 
-@keyframes softBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
-  30% { transform: translateY(-8px); opacity: 1; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-/* ONBOARDING */
 .ob-screen {
   display: flex;
   flex-direction: column;
@@ -605,4 +453,19 @@ html, body {
   font-size: 17px;
   font-weight: 700;
   cursor: pointer;
-    }
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.04); opacity: 0.92; }
+}
+
+@keyframes softBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+  30% { transform: translateY(-8px); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+  }
