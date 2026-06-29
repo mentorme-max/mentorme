@@ -44,12 +44,33 @@ function loadWelcomeScreen() {
 function loadChatScreen() {
   var app = document.getElementById('app');
   app.style.overflow = 'hidden';
-  app.innerHTML = '<div class="chat-screen"><div class="chat-header"><div class="chat-header-left"><img src="logo.png" class="mentor-avatar-img" alt="MentorMe" /><div><h2 class="mentor-name">MentorMe</h2><p class="mentor-status">&#9679; Online</p></div></div><button class="mode-btn" onclick="alert(\'Modes coming soon!\')">🎯 Mode</button></div><div class="chat-messages" id="chat-messages"><div class="message mentor-message"><div class="message-bubble" id="intro-bubble"></div></div></div><div class="chat-input-area"><div class="chat-input-wrapper"><button class="input-left-btn">+</button><textarea id="user-input" class="chat-input" placeholder="Reply to MentorMe" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea><button class="mic-btn">🎤</button><button class="send-btn" onclick="sendMessage()">&#9650;</button></div></div></div>';
+  app.innerHTML =
+    '<div class="chat-screen">' +
+      '<div class="chat-header">' +
+        '<div class="chat-header-left">' +
+          '<img src="logo.png" class="mentor-avatar-img" alt="MentorMe" />' +
+          '<h2 class="mentor-name">MentorMe</h2>' +
+        '</div>' +
+      '</div>' +
+      '<div class="chat-messages" id="chat-messages">' +
+        '<div class="message mentor-message">' +
+          '<div class="message-bubble" id="intro-bubble"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="chat-input-area">' +
+        '<div class="chat-input-wrapper">' +
+          '<button class="input-left-btn" title="Attach">+</button>' +
+          '<textarea id="user-input" class="chat-input" placeholder="Reply to MentorMe" rows="1" onkeydown="handleKey(event)" oninput="handleInput(this)"></textarea>' +
+          '<button class="mic-btn" title="Voice">🎤</button>' +
+          '<button class="send-btn" id="send-btn" onclick="sendMessage()">&#9650;</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
   setTimeout(function() {
     streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not an assistant. I ask questions, I listen, and I help you figure things out.\n\nBefore we begin, let me ask you something simple.\n\nWhat's been on your mind lately?");
   }, 600);
-}
-
+    }
 function streamText(elementId, text) {
   var el = document.getElementById(elementId);
   if (!el) return;
@@ -70,9 +91,13 @@ function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
 
-function autoResize(t) {
-  t.style.height = 'auto';
-  t.style.height = Math.min(t.scrollHeight, 130) + 'px';
+function handleInput(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 130) + 'px';
+  var btn = document.getElementById('send-btn');
+  if (btn) {
+    btn.style.background = textarea.value.trim() ? 'var(--accent)' : '#334155';
+  }
 }
 
 function sendMessage() {
