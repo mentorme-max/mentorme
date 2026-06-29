@@ -56,7 +56,7 @@ function loadChatScreen() {
       <!-- HEADER -->
       <div class="chat-header">
         <div class="chat-header-left">
-          <div class="mentor-avatar">M</div>
+          <img src="logo.png" class="mentor-avatar-img" alt="MentorMe" />
           <div class="mentor-info">
             <h2 class="mentor-name">MentorMe</h2>
             <p class="mentor-status">● Online — ready to help</p>
