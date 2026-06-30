@@ -47,11 +47,28 @@ function loadChatScreen() {
   app.innerHTML =
     '<div class="chat-screen">' +
       '<div class="chat-header">' +
-        '<div class="chat-header-left">' +
-          '<img src="logo.png" class="mentor-avatar-img" alt="MentorMe" />' +
-          '<h2 class="mentor-name">MentorMe</h2>' +
+        '<button class="menu-btn" onclick="toggleMenu()">&#9776;</button>' +
+        '<h2 class="mentor-name">MentorMe</h2>' +
+        '<div class="header-right"></div>' +
+      '</div>' +
+      '<div class="side-menu" id="side-menu">' +
+        '<div class="side-menu-header">' +
+          '<img src="logo.png" class="side-logo" alt="MentorMe" />' +
+          '<button class="close-menu-btn" onclick="toggleMenu()">&#10005;</button>' +
+        '</div>' +
+        '<div class="menu-items">' +
+          '<div class="menu-item" onclick="newChat()"><span class="menu-icon">&#43;</span> New Chat</div>' +
+          '<div class="menu-item" onclick="showHistory()"><span class="menu-icon">&#128172;</span> Chat History</div>' +
+          '<div class="menu-item" onclick="showGoals()"><span class="menu-icon">&#127919;</span> My Goals</div>' +
+          '<div class="menu-item" onclick="showProgress()"><span class="menu-icon">&#128200;</span> My Progress</div>' +
+          '<div class="menu-item" onclick="showSettings()"><span class="menu-icon">&#9881;</span> Settings</div>' +
+          '<div class="menu-item" onclick="showHelp()"><span class="menu-icon">&#10067;</span> Help</div>' +
+        '</div>' +
+        '<div class="menu-footer">' +
+          '<div class="menu-item menu-logout" onclick="logout()"><span class="menu-icon">&#8594;</span> Log Out</div>' +
         '</div>' +
       '</div>' +
+      '<div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>' +
       '<div class="chat-messages" id="chat-messages">' +
         '<div class="message mentor-message">' +
           '<div class="message-bubble" id="intro-bubble"></div>' +
@@ -70,7 +87,56 @@ function loadChatScreen() {
   setTimeout(function() {
     streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not an assistant. I ask questions, I listen, and I help you figure things out.\n\nBefore we begin, let me ask you something simple.\n\nWhat's been on your mind lately?");
   }, 600);
-    }
+}
+
+function toggleMenu() {
+  var menu = document.getElementById('side-menu');
+  var overlay = document.getElementById('menu-overlay');
+  var isOpen = menu.classList.contains('open');
+  if (isOpen) {
+    menu.classList.remove('open');
+    overlay.classList.remove('active');
+  } else {
+    menu.classList.add('open');
+    overlay.classList.add('active');
+  }
+}
+
+function newChat() {
+  toggleMenu();
+  loadChatScreen();
+}
+
+function showHistory() {
+  toggleMenu();
+  alert('Chat history coming soon!');
+}
+
+function showGoals() {
+  toggleMenu();
+  alert('Goals coming soon!');
+}
+
+function showProgress() {
+  toggleMenu();
+  alert('Progress coming soon!');
+}
+
+function showSettings() {
+  toggleMenu();
+  alert('Settings coming soon!');
+}
+
+function showHelp() {
+  toggleMenu();
+  alert('Help coming soon!');
+}
+
+function logout() {
+  toggleMenu();
+  alert('Logout coming soon!');
+}
+
 function streamText(elementId, text) {
   var el = document.getElementById(elementId);
   if (!el) return;
@@ -154,4 +220,4 @@ function hideTyping() {
 function scrollToBottom() {
   var m = document.getElementById('chat-messages');
   if (m) m.scrollTop = m.scrollHeight;
-    }
+      }
