@@ -41,9 +41,222 @@ function loadWelcomeScreen() {
   app.innerHTML = '<div class="welcome-screen"><img src="logo.png" class="welcome-logo" alt="MentorMe" /><p class="welcome-tagline">One honest conversation can change everything.</p><p class="welcome-subtitle">Your personal AI mentor. Ask questions. Get honest guidance. Move forward.</p><div class="welcome-features"><div class="feature-item"><span class="feature-icon">🎯</span><span>Finds your real problem</span></div><div class="feature-item"><span class="feature-icon">💡</span><span>Gives practical advice</span></div><div class="feature-item"><span class="feature-icon">🧠</span><span>Remembers your journey</span></div><div class="feature-item"><span class="feature-icon">🌍</span><span>Available anywhere, anytime</span></div></div><button class="btn-primary" onclick="loadChatScreen()">Start Free Session</button><p class="welcome-login">Already have an account? <span class="link" onclick="alert(\'Login coming soon!\')">Sign in</span></p></div>';
 }
 
+/* ============================
+   MENTOR ENGINE — CONVERSATION MEMORY + STAGE FLOW
+   ============================ */
+
+var mentorMemory = {
+  stage: 'problem',
+  topic: null,
+  emotion: null,
+  problem: null,
+  goal: null,
+  rootCause: null,
+  currentSituation: null,
+  skills: null,
+  resources: null,
+  challenges: null,
+  priorities: null,
+  history: []
+};
+
+var STAGE_ORDER = [
+  'problem',
+  'goal',
+  'rootCause',
+  'currentSituation',
+  'skills',
+  'resources',
+  'challenges',
+  'priorities',
+  'insight',
+  'action'
+];
+
+var STAGE_QUESTIONS = {
+  problem: "What's been on your mind lately?",
+  goal: "When you imagine this resolved, what does that look like for you?",
+  rootCause: "What do you think is the real root of this — not the surface issue, but underneath it?",
+  currentSituation: "Where do things stand for you right now with this?",
+  skills: "What skills or strengths do you already have that could help here?",
+  resources: "What resources — time, money, people, knowledge — do you currently have access to?",
+  challenges: "What is the biggest obstacle standing in your way right now?",
+  priorities: "If you could only focus on one thing first, what would it be?"
+};
+
+var TOPIC_KEYWORDS = {
+  career: ['job', 'career', 'work', 'boss', 'promotion', 'resign', 'resume', 'interview'],
+  money: ['money', 'finance', 'broke', 'salary', 'debt', 'income', 'savings', 'afford'],
+  business: ['business', 'startup', 'company', 'entrepreneur', 'customers', 'product'],
+  relationships: ['relationship', 'partner', 'marriage', 'friend', 'family', 'breakup', 'love'],
+  health: ['health', 'sick', 'tired', 'sleep', 'stress', 'anxiety', 'depressed', 'mental'],
+  education: ['school', 'study', 'exam', 'degree', 'university', 'course', 'learn']
+};
+
+var EMOTION_KEYWORDS = {
+  frustrated: ['frustrated', 'stuck', 'annoyed', 'fed up'],
+  anxious: ['anxious', 'worried', 'scared', 'nervous', 'afraid'],
+  sad: ['sad', 'depressed', 'down', 'hopeless', 'lost'],
+  angry: ['angry', 'mad', 'furious', 'upset'],
+  hopeful: ['hopeful', 'excited', 'motivated', 'ready'],
+  tired: ['tired', 'exhausted', 'drained', 'burned out']
+};
+
+function detectFromText(text, keywordMap) {
+  var lower = text.toLowerCase();
+  for (var key in keywordMap) {
+    var words = keywordMap[key];
+    for (var i = 0; i < words.length; i++) {
+      if (lower.indexOf(words[i]) !== -1) return key;
+    }
+  }
+  return null;
+}
+
+function isMeaningfulAnswer(text) {
+  return text && text.trim().length >= 2;
+}
+
+function recordAnswer(stageKey, text) {
+  mentorMemory[stageKey] = text;
+  mentorMemory.history.push({ stage: stageKey, answer: text });
+
+  if (!mentorMemory.topic) {
+    var topic = detectFromText(text, TOPIC_KEYWORDS);
+    if (topic) mentorMemory.topic = topic;
+  }
+  var emotion = detectFromText(text, EMOTION_KEYWORDS);
+  if (emotion) mentorMemory.emotion = emotion;
+}
+
+function getNextStage(currentStage) {
+  var idx = STAGE_ORDER.indexOf(currentStage);
+  if (idx === -1 || idx === STAGE_ORDER.length - 1) return null;
+  return STAGE_ORDER[idx + 1];
+}
+
+function processUserMessage(text) {
+  var currentStage = mentorMemory.stage;
+
+  if (currentStage === 'insight' || currentStage === 'action') {
+    // After the structured interview, keep listening but respond reflectively.
+    recordAnswer('history', text);
+    return "Noted. Would you like to revisit your action plan, or talk through something new?";
+  }
+
+  if (isMeaningfulAnswer(text) && STAGE_QUESTIONS[currentStage]) {
+    recordAnswer(currentStage, text);
+  }
+
+  var nextStage = getNextStage(currentStage);
+
+  if (!nextStage) {
+    mentorMemory.stage = 'insight';
+    return buildInsight();
+  }
+
+  mentorMemory.stage = nextStage;
+
+  if (nextStage === 'insight') {
+    return buildInsight();
+  }
+
+  return STAGE_QUESTIONS[nextStage];
+}
+
+function buildInsight() {
+  var m = mentorMemory;
+  var lines = [];
+
+  lines.push("Let me reflect back what I'm noticing.");
+
+  if (m.problem) {
+    lines.push("You came in carrying something around: \"" + m.problem + "\"");
+  }
+  if (m.goal) {
+    lines.push("What you actually want is this: " + m.goal);
+  }
+  if (m.rootCause) {
+    lines.push("And underneath it, the real root seems to be: " + m.rootCause);
+  }
+  if (m.emotion) {
+    lines.push("Through this, you've mostly felt " + m.emotion + ".");
+  }
+  if (m.challenges) {
+    lines.push("The biggest thing in your way right now is: " + m.challenges);
+  }
+
+  lines.push("\nThis isn't just a surface problem — it's connected to what you actually want for yourself.");
+  lines.push("\nReady for a clear next step? Just say \"yes\" and I'll lay out an action plan.");
+
+  mentorMemory.stage = 'action';
+  return lines.join('\n');
+}
+
+function buildActionPlan() {
+  var m = mentorMemory;
+  var lines = [];
+
+  lines.push("Here is a practical starting point.");
+  lines.push("");
+
+  if (m.priorities) {
+    lines.push("1. Start with what you already named as your priority: " + m.priorities);
+  } else {
+    lines.push("1. Pick one small, concrete action you can take in the next 48 hours.");
+  }
+
+  if (m.skills) {
+    lines.push("2. Use what you already have — you mentioned: " + m.skills);
+  } else {
+    lines.push("2. Identify one strength you already have that applies here.");
+  }
+
+  if (m.challenges) {
+    lines.push("3. Plan around your biggest obstacle: " + m.challenges + ". Break it into one smaller, manageable piece.");
+  }
+
+  lines.push("4. Revisit this conversation in a week and tell me what changed.");
+  lines.push("");
+  lines.push("One honest step is enough to start. What feels most doable first?");
+
+  return lines.join('\n');
+}
+
+function getMentorReply(userText) {
+  var lower = userText.trim().toLowerCase();
+
+  if (mentorMemory.stage === 'action' && (lower === 'yes' || lower.indexOf('yes') !== -1 || lower.indexOf('ready') !== -1)) {
+    mentorMemory.stage = 'action-given';
+    return buildActionPlan();
+  }
+
+  return processUserMessage(userText);
+}
+
+/* ============================
+   CHAT UI
+   ============================ */
+
 function loadChatScreen() {
   var app = document.getElementById('app');
   app.style.overflow = 'hidden';
+
+  mentorMemory = {
+    stage: 'problem',
+    topic: null,
+    emotion: null,
+    problem: null,
+    goal: null,
+    rootCause: null,
+    currentSituation: null,
+    skills: null,
+    resources: null,
+    challenges: null,
+    priorities: null,
+    history: []
+  };
+
   app.innerHTML =
     '<div class="chat-screen">' +
       '<div class="chat-header">' +
@@ -84,7 +297,7 @@ function loadChatScreen() {
     '</div>';
 
   setTimeout(function() {
-    streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not an assistant. I ask questions, I listen, and I help you figure things out.\n\nBefore we begin, let me ask you something simple.\n\nWhat's been on your mind lately?");
+    streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not an assistant. I ask questions, I listen, and I help you figure things out.\n\nBefore we begin, let me ask you something simple.\n\n" + STAGE_QUESTIONS.problem);
   }, 600);
 }
 
@@ -177,12 +390,12 @@ function handleInput(textarea) {
   if (textarea.value.trim()) {
     btn.innerHTML = sendIconSvg();
     btn.classList.add('send-active');
-    btn.setAttribute('onclick', 'sendMessage()');
   } else {
     btn.innerHTML = micIconSvg();
     btn.classList.remove('send-active');
-    btn.setAttribute('onclick', 'sendMessage()');
   }
+
+  scrollToBottom();
 }
 
 function sendMessage() {
@@ -193,24 +406,14 @@ function sendMessage() {
   input.value = '';
   input.style.height = 'auto';
   handleInput(input);
+
   setTimeout(function() {
     showTyping();
     setTimeout(function() {
       hideTyping();
       addMentorMessage(getMentorReply(text));
-    }, 2200);
-  }, 400);
-}
-
-function getMentorReply(userText) {
-  var replies = [
-    "That's a meaningful place to start. What do you think is the root of this?",
-    "Thank you for sharing that. When you imagine this resolved, what does that look like?",
-    "I understand. What is one step, however small, that would move you forward today?",
-    "That makes sense. What has stopped you from addressing this until now?",
-    "I appreciate your honesty. What would need to change for you to feel more in control here?"
-  ];
-  return replies[Math.floor(Math.random() * replies.length)];
+    }, 1800);
+  }, 300);
 }
 
 function addUserMessage(text) {
@@ -238,7 +441,7 @@ function showTyping() {
   var d = document.createElement('div');
   d.className = 'message mentor-message';
   d.id = 'typing-indicator';
-  d.innerHTML = '<div class="typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+  d.innerHTML = '<div class="typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div><span class="typing-label">Mentor is thinking...</span>';
   m.appendChild(d);
   scrollToBottom();
 }
@@ -251,4 +454,8 @@ function hideTyping() {
 function scrollToBottom() {
   var m = document.getElementById('chat-messages');
   if (m) m.scrollTop = m.scrollHeight;
-      }
+}
+
+window.visualViewport && window.visualViewport.addEventListener('resize', function() {
+  scrollToBottom();
+});
