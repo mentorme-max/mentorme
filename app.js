@@ -74,14 +74,14 @@ var STAGE_ORDER = [
 ];
 
 var STAGE_QUESTIONS = {
-  problem: "What's been on your mind lately?",
-  goal: "When you imagine this resolved, what does that look like for you?",
-  rootCause: "What do you think is the real root of this — not the surface issue, but underneath it?",
-  currentSituation: "Where do things stand for you right now with this?",
-  skills: "What skills or strengths do you already have that could help here?",
-  resources: "What resources — time, money, people, knowledge — do you currently have access to?",
-  challenges: "What is the biggest obstacle standing in your way right now?",
-  priorities: "If you could only focus on one thing first, what would it be?"
+  problem: "What's been sitting with you lately — the thing that's hard to put down?",
+  goal: "If everything went exactly the way you hoped from here, what would your life look like?",
+  rootCause: "When you really think about it... what do you believe has been holding you back?",
+  currentSituation: "If someone looked at your life today, just as it is, what would they see?",
+  skills: "What strengths have helped you get through difficult situations before?",
+  resources: "If I asked you to start tomorrow, without waiting for the perfect moment, what could you already use?",
+  challenges: "What's the biggest obstacle standing between where you are today and where you want to be?",
+  priorities: "What makes this important enough that you're willing to change?"
 };
 
 var TOPIC_KEYWORDS = {
@@ -101,6 +101,58 @@ var EMOTION_KEYWORDS = {
   hopeful: ['hopeful', 'excited', 'motivated', 'ready'],
   tired: ['tired', 'exhausted', 'drained', 'burned out']
 };
+
+// Acknowledgment phrases used to open the mentor's reply before asking the
+// next question. One is chosen based on the stage that was just answered,
+// giving the feel of a mentor reflecting before guiding forward.
+var ACKNOWLEDGMENTS = {
+  problem: [
+    "That tells me something real is going on beneath the surface.",
+    "Thank you for putting that into words — that takes honesty.",
+    "I hear you. That's not a small thing to be carrying."
+  ],
+  goal: [
+    "That's a meaningful picture. It tells me you're not just looking for a fix — you're looking for a different life.",
+    "I can hear how much that matters to you.",
+    "That gives me a clearer sense of what you're actually working toward."
+  ],
+  rootCause: [
+    "That's a brave thing to admit to yourself.",
+    "That's often the part people avoid looking at directly. I'm glad you didn't.",
+    "That makes a lot of what you said earlier make more sense."
+  ],
+  currentSituation: [
+    "Thank you for being honest about where things stand.",
+    "That's a clear picture — and clarity is where change starts.",
+    "I appreciate you not sugarcoating that."
+  ],
+  skills: [
+    "That's worth remembering — you've already proven you can do hard things.",
+    "That strength didn't disappear. It's still available to you now.",
+    "That's exactly the kind of thing we can build on."
+  ],
+  resources: [
+    "That's more than most people realize they already have.",
+    "Good. That means you don't have to wait for permission to begin.",
+    "That's a real starting point, not just an idea."
+  ],
+  challenges: [
+    "That's the real obstacle, isn't it — not the small stuff, but that.",
+    "Naming it clearly like that is half the work.",
+    "That makes sense as the thing standing in the way."
+  ],
+  priorities: [
+    "That tells me this isn't just about logic for you — it's personal.",
+    "That's the kind of reason that actually carries people through.",
+    "That's worth holding onto when things get hard."
+  ]
+};
+
+function pickAcknowledgment(stageKey) {
+  var options = ACKNOWLEDGMENTS[stageKey];
+  if (!options) return '';
+  return options[Math.floor(Math.random() * options.length)];
+}
 
 function detectFromText(text, keywordMap) {
   var lower = text.toLowerCase();
@@ -139,29 +191,37 @@ function processUserMessage(text) {
   var currentStage = mentorMemory.stage;
 
   if (currentStage === 'insight' || currentStage === 'action') {
-    // After the structured interview, keep listening but respond reflectively.
     recordAnswer('history', text);
     return "Noted. Would you like to revisit your action plan, or talk through something new?";
   }
 
+  var answeredStage = currentStage;
+  var acknowledgment = '';
+
   if (isMeaningfulAnswer(text) && STAGE_QUESTIONS[currentStage]) {
     recordAnswer(currentStage, text);
+    acknowledgment = pickAcknowledgment(answeredStage);
   }
 
   var nextStage = getNextStage(currentStage);
 
   if (!nextStage) {
     mentorMemory.stage = 'insight';
-    return buildInsight();
+    return joinWithAcknowledgment(acknowledgment, buildInsight());
   }
 
   mentorMemory.stage = nextStage;
 
   if (nextStage === 'insight') {
-    return buildInsight();
+    return joinWithAcknowledgment(acknowledgment, buildInsight());
   }
 
-  return STAGE_QUESTIONS[nextStage];
+  return joinWithAcknowledgment(acknowledgment, STAGE_QUESTIONS[nextStage]);
+}
+
+function joinWithAcknowledgment(acknowledgment, nextPart) {
+  if (!acknowledgment) return nextPart;
+  return acknowledgment + "\n\n" + nextPart;
 }
 
 function buildInsight() {
@@ -201,13 +261,13 @@ function buildActionPlan() {
   lines.push("");
 
   if (m.priorities) {
-    lines.push("1. Start with what you already named as your priority: " + m.priorities);
+    lines.push("1. Start with what matters most to you: " + m.priorities);
   } else {
     lines.push("1. Pick one small, concrete action you can take in the next 48 hours.");
   }
 
   if (m.skills) {
-    lines.push("2. Use what you already have — you mentioned: " + m.skills);
+    lines.push("2. Lean on the strength you already named: " + m.skills);
   } else {
     lines.push("2. Identify one strength you already have that applies here.");
   }
@@ -297,7 +357,7 @@ function loadChatScreen() {
     '</div>';
 
   setTimeout(function() {
-    streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not an assistant. I ask questions, I listen, and I help you figure things out.\n\nBefore we begin, let me ask you something simple.\n\n" + STAGE_QUESTIONS.problem);
+    streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not a therapist, not a questionnaire. I listen, I ask the questions that matter, and I help you see what you might be too close to see yourself.\n\nSo let's start simple.\n\n" + STAGE_QUESTIONS.problem);
   }, 600);
 }
 
