@@ -365,11 +365,11 @@ html, body {
 
 .typing-bubble {
   background: #334155;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
   display: flex;
-  gap: 6px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -384,6 +384,13 @@ html, body {
 
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+.typing-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  white-space: nowrap;
+}
 
 .chat-input-area {
   flex-shrink: 0;
@@ -562,4 +569,4 @@ html, body {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
-    }
+  }
