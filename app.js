@@ -42,13 +42,10 @@ function loadWelcomeScreen() {
 }
 
 /* ============================
-   MENTOR ENGINE — CONVERSATION MEMORY + STAGE FLOW
+   CONVERSATION MEMORY
    ============================ */
 
 var mentorMemory = {
-  stage: 'problem',
-  topic: null,
-  emotion: null,
   problem: null,
   goal: null,
   rootCause: null,
@@ -57,39 +54,17 @@ var mentorMemory = {
   resources: null,
   challenges: null,
   priorities: null,
-  history: []
-};
-
-var STAGE_ORDER = [
-  'problem',
-  'goal',
-  'rootCause',
-  'currentSituation',
-  'skills',
-  'resources',
-  'challenges',
-  'priorities',
-  'insight',
-  'action'
-];
-
-var STAGE_QUESTIONS = {
-  problem: "What's been sitting with you lately — the thing that's hard to put down?",
-  goal: "If everything went exactly the way you hoped from here, what would your life look like?",
-  rootCause: "When you really think about it... what do you believe has been holding you back?",
-  currentSituation: "If someone looked at your life today, just as it is, what would they see?",
-  skills: "What strengths have helped you get through difficult situations before?",
-  resources: "If I asked you to start tomorrow, without waiting for the perfect moment, what could you already use?",
-  challenges: "What's the biggest obstacle standing between where you are today and where you want to be?",
-  priorities: "What makes this important enough that you're willing to change?"
+  emotion: null,
+  topic: null,
+  conversationHistory: []
 };
 
 var TOPIC_KEYWORDS = {
-  career: ['job', 'career', 'work', 'boss', 'promotion', 'resign', 'resume', 'interview'],
-  money: ['money', 'finance', 'broke', 'salary', 'debt', 'income', 'savings', 'afford'],
+  career: ['job', 'career', 'work', 'boss', 'promotion', 'resign', 'interview'],
+  money: ['money', 'finance', 'broke', 'salary', 'debt', 'income', 'savings'],
   business: ['business', 'startup', 'company', 'entrepreneur', 'customers', 'product'],
   relationships: ['relationship', 'partner', 'marriage', 'friend', 'family', 'breakup', 'love'],
-  health: ['health', 'sick', 'tired', 'sleep', 'stress', 'anxiety', 'depressed', 'mental'],
+  health: ['health', 'sick', 'tired', 'sleep', 'stress', 'anxiety', 'depressed'],
   education: ['school', 'study', 'exam', 'degree', 'university', 'course', 'learn']
 };
 
@@ -102,58 +77,6 @@ var EMOTION_KEYWORDS = {
   tired: ['tired', 'exhausted', 'drained', 'burned out']
 };
 
-// Acknowledgment phrases used to open the mentor's reply before asking the
-// next question. One is chosen based on the stage that was just answered,
-// giving the feel of a mentor reflecting before guiding forward.
-var ACKNOWLEDGMENTS = {
-  problem: [
-    "That tells me something real is going on beneath the surface.",
-    "Thank you for putting that into words — that takes honesty.",
-    "I hear you. That's not a small thing to be carrying."
-  ],
-  goal: [
-    "That's a meaningful picture. It tells me you're not just looking for a fix — you're looking for a different life.",
-    "I can hear how much that matters to you.",
-    "That gives me a clearer sense of what you're actually working toward."
-  ],
-  rootCause: [
-    "That's a brave thing to admit to yourself.",
-    "That's often the part people avoid looking at directly. I'm glad you didn't.",
-    "That makes a lot of what you said earlier make more sense."
-  ],
-  currentSituation: [
-    "Thank you for being honest about where things stand.",
-    "That's a clear picture — and clarity is where change starts.",
-    "I appreciate you not sugarcoating that."
-  ],
-  skills: [
-    "That's worth remembering — you've already proven you can do hard things.",
-    "That strength didn't disappear. It's still available to you now.",
-    "That's exactly the kind of thing we can build on."
-  ],
-  resources: [
-    "That's more than most people realize they already have.",
-    "Good. That means you don't have to wait for permission to begin.",
-    "That's a real starting point, not just an idea."
-  ],
-  challenges: [
-    "That's the real obstacle, isn't it — not the small stuff, but that.",
-    "Naming it clearly like that is half the work.",
-    "That makes sense as the thing standing in the way."
-  ],
-  priorities: [
-    "That tells me this isn't just about logic for you — it's personal.",
-    "That's the kind of reason that actually carries people through.",
-    "That's worth holding onto when things get hard."
-  ]
-};
-
-function pickAcknowledgment(stageKey) {
-  var options = ACKNOWLEDGMENTS[stageKey];
-  if (!options) return '';
-  return options[Math.floor(Math.random() * options.length)];
-}
-
 function detectFromText(text, keywordMap) {
   var lower = text.toLowerCase();
   for (var key in keywordMap) {
@@ -165,133 +88,46 @@ function detectFromText(text, keywordMap) {
   return null;
 }
 
-function isMeaningfulAnswer(text) {
-  return text && text.trim().length >= 2;
-}
-
-function recordAnswer(stageKey, text) {
-  mentorMemory[stageKey] = text;
-  mentorMemory.history.push({ stage: stageKey, answer: text });
-
+function updateMemory(userText) {
   if (!mentorMemory.topic) {
-    var topic = detectFromText(text, TOPIC_KEYWORDS);
+    var topic = detectFromText(userText, TOPIC_KEYWORDS);
     if (topic) mentorMemory.topic = topic;
   }
-  var emotion = detectFromText(text, EMOTION_KEYWORDS);
+  var emotion = detectFromText(userText, EMOTION_KEYWORDS);
   if (emotion) mentorMemory.emotion = emotion;
+
+  mentorMemory.conversationHistory.push({ role: 'user', text: userText });
 }
 
-function getNextStage(currentStage) {
-  var idx = STAGE_ORDER.indexOf(currentStage);
-  if (idx === -1 || idx === STAGE_ORDER.length - 1) return null;
-  return STAGE_ORDER[idx + 1];
+function recordMentorReply(text) {
+  mentorMemory.conversationHistory.push({ role: 'mentor', text: text });
 }
 
-function processUserMessage(text) {
-  var currentStage = mentorMemory.stage;
+/* ============================
+   GEMINI API CALL
+   ============================ */
 
-  if (currentStage === 'insight' || currentStage === 'action') {
-    recordAnswer('history', text);
-    return "Noted. Would you like to revisit your action plan, or talk through something new?";
+async function callMentorAPI(userText) {
+  try {
+    var response = await fetch('/api/mentor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: userText,
+        memory: mentorMemory
+      })
+    });
+
+    var data = await response.json();
+
+    if (data && data.reply) {
+      return data.reply;
+    } else {
+      return "I'm here with you. Could you tell me a little more about that?";
+    }
+  } catch (err) {
+    return "I'm having a moment of difficulty connecting. Could you say that again?";
   }
-
-  var answeredStage = currentStage;
-  var acknowledgment = '';
-
-  if (isMeaningfulAnswer(text) && STAGE_QUESTIONS[currentStage]) {
-    recordAnswer(currentStage, text);
-    acknowledgment = pickAcknowledgment(answeredStage);
-  }
-
-  var nextStage = getNextStage(currentStage);
-
-  if (!nextStage) {
-    mentorMemory.stage = 'insight';
-    return joinWithAcknowledgment(acknowledgment, buildInsight());
-  }
-
-  mentorMemory.stage = nextStage;
-
-  if (nextStage === 'insight') {
-    return joinWithAcknowledgment(acknowledgment, buildInsight());
-  }
-
-  return joinWithAcknowledgment(acknowledgment, STAGE_QUESTIONS[nextStage]);
-}
-
-function joinWithAcknowledgment(acknowledgment, nextPart) {
-  if (!acknowledgment) return nextPart;
-  return acknowledgment + "\n\n" + nextPart;
-}
-
-function buildInsight() {
-  var m = mentorMemory;
-  var lines = [];
-
-  lines.push("Let me reflect back what I'm noticing.");
-
-  if (m.problem) {
-    lines.push("You came in carrying something around: \"" + m.problem + "\"");
-  }
-  if (m.goal) {
-    lines.push("What you actually want is this: " + m.goal);
-  }
-  if (m.rootCause) {
-    lines.push("And underneath it, the real root seems to be: " + m.rootCause);
-  }
-  if (m.emotion) {
-    lines.push("Through this, you've mostly felt " + m.emotion + ".");
-  }
-  if (m.challenges) {
-    lines.push("The biggest thing in your way right now is: " + m.challenges);
-  }
-
-  lines.push("\nThis isn't just a surface problem — it's connected to what you actually want for yourself.");
-  lines.push("\nReady for a clear next step? Just say \"yes\" and I'll lay out an action plan.");
-
-  mentorMemory.stage = 'action';
-  return lines.join('\n');
-}
-
-function buildActionPlan() {
-  var m = mentorMemory;
-  var lines = [];
-
-  lines.push("Here is a practical starting point.");
-  lines.push("");
-
-  if (m.priorities) {
-    lines.push("1. Start with what matters most to you: " + m.priorities);
-  } else {
-    lines.push("1. Pick one small, concrete action you can take in the next 48 hours.");
-  }
-
-  if (m.skills) {
-    lines.push("2. Lean on the strength you already named: " + m.skills);
-  } else {
-    lines.push("2. Identify one strength you already have that applies here.");
-  }
-
-  if (m.challenges) {
-    lines.push("3. Plan around your biggest obstacle: " + m.challenges + ". Break it into one smaller, manageable piece.");
-  }
-
-  lines.push("4. Revisit this conversation in a week and tell me what changed.");
-  lines.push("");
-  lines.push("One honest step is enough to start. What feels most doable first?");
-
-  return lines.join('\n');
-}
-
-function getMentorReply(userText) {
-  var lower = userText.trim().toLowerCase();
-
-  if (mentorMemory.stage === 'action' && (lower === 'yes' || lower.indexOf('yes') !== -1 || lower.indexOf('ready') !== -1)) {
-    mentorMemory.stage = 'action-given';
-    return buildActionPlan();
-  }
-
-  return processUserMessage(userText);
 }
 
 /* ============================
@@ -303,9 +139,6 @@ function loadChatScreen() {
   app.style.overflow = 'hidden';
 
   mentorMemory = {
-    stage: 'problem',
-    topic: null,
-    emotion: null,
     problem: null,
     goal: null,
     rootCause: null,
@@ -314,7 +147,9 @@ function loadChatScreen() {
     resources: null,
     challenges: null,
     priorities: null,
-    history: []
+    emotion: null,
+    topic: null,
+    conversationHistory: []
   };
 
   app.innerHTML =
@@ -357,7 +192,7 @@ function loadChatScreen() {
     '</div>';
 
   setTimeout(function() {
-    streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not a therapist, not a questionnaire. I listen, I ask the questions that matter, and I help you see what you might be too close to see yourself.\n\nSo let's start simple.\n\n" + STAGE_QUESTIONS.problem);
+    streamText('intro-bubble', "Hello. I'm glad you're here.\n\nI'm your personal mentor — not a chatbot, not a therapist, not a questionnaire. I listen, I ask the questions that matter, and I help you see what you might be too close to see yourself.\n\nSo let's start simple.\n\nWhat's been sitting with you lately — the thing that's hard to put down?");
   }, 600);
 }
 
@@ -382,40 +217,13 @@ function toggleMenu() {
   }
 }
 
-function newChat() {
-  toggleMenu();
-  loadChatScreen();
-}
-
-function showHistory() {
-  toggleMenu();
-  alert('Chat history coming soon!');
-}
-
-function showGoals() {
-  toggleMenu();
-  alert('Goals coming soon!');
-}
-
-function showProgress() {
-  toggleMenu();
-  alert('Progress coming soon!');
-}
-
-function showSettings() {
-  toggleMenu();
-  alert('Settings coming soon!');
-}
-
-function showHelp() {
-  toggleMenu();
-  alert('Help coming soon!');
-}
-
-function logout() {
-  toggleMenu();
-  alert('Logout coming soon!');
-}
+function newChat() { toggleMenu(); loadChatScreen(); }
+function showHistory() { toggleMenu(); alert('Chat history coming soon!'); }
+function showGoals() { toggleMenu(); alert('Goals coming soon!'); }
+function showProgress() { toggleMenu(); alert('Progress coming soon!'); }
+function showSettings() { toggleMenu(); alert('Settings coming soon!'); }
+function showHelp() { toggleMenu(); alert('Help coming soon!'); }
+function logout() { toggleMenu(); alert('Logout coming soon!'); }
 
 function streamText(elementId, text) {
   var el = document.getElementById(elementId);
@@ -435,13 +243,12 @@ function streamText(elementId, text) {
 
 function handleKey(e) {
   // Enter always creates a new line.
-  // Sending only ever happens through the send button.
+  // Sending only happens through the send button.
 }
 
 function handleInput(textarea) {
   textarea.style.height = 'auto';
-  var lineHeight = 22;
-  var maxHeight = lineHeight * 6 + 16;
+  var maxHeight = 22 * 6 + 16;
   textarea.style.height = Math.min(textarea.scrollHeight, maxHeight) + 'px';
 
   var btn = document.getElementById('send-btn');
@@ -462,17 +269,20 @@ function sendMessage() {
   var input = document.getElementById('user-input');
   var text = input.value.trim();
   if (!text) return;
+
   addUserMessage(text);
+  updateMemory(text);
   input.value = '';
   input.style.height = 'auto';
   handleInput(input);
 
   setTimeout(function() {
     showTyping();
-    setTimeout(function() {
+    callMentorAPI(text).then(function(reply) {
       hideTyping();
-      addMentorMessage(getMentorReply(text));
-    }, 1800);
+      recordMentorReply(reply);
+      addMentorMessage(reply);
+    });
   }, 300);
 }
 
