@@ -5,78 +5,91 @@ export default async function handler(req, res) {
   }
 
   const { message, memory } = req.body;
-
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    res.status(500).json({ error: 'Missing API key on server' });
+    res.status(500).json({ reply: 'API key not configured on server.' });
     return;
   }
 
   const systemPrompt = buildSystemPrompt(memory);
+  const fullPrompt = systemPrompt + '\n\nThe person just said: "' + message + '"\n\nRespond now as MentorMe. Be warm, brief, and ask only one question.';
 
   try {
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey,
+    const geminiRes = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [
             {
-              role: 'user',
-              parts: [{ text: systemPrompt + '\n\nUser just said: "' + message + '"\n\nRespond now as MentorMe.' }]
+              parts: [{ text: fullPrompt }]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 300
+          }
         })
       }
     );
 
-    const data = await response.json();
+    const data = await geminiRes.json();
 
-    const text =
+    if (data.error) {
+      res.status(200).json({ reply: 'Something went wrong with the AI. Error: ' + data.error.message });
+      return;
+    }
+
+    const reply =
       data &&
       data.candidates &&
       data.candidates[0] &&
       data.candidates[0].content &&
       data.candidates[0].content.parts &&
-      data.candidates[0].content.parts[0]
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text
         ? data.candidates[0].content.parts[0].text
-        : "I'm here, but I had trouble forming a response just now. Could you say that again?";
+        : 'I am here with you. Could you tell me a little more about that?';
 
-    res.status(200).json({ reply: text });
+    res.status(200).json({ reply: reply });
+
   } catch (err) {
-    res.status(500).json({ error: 'Failed to reach Gemini', details: String(err) });
+    res.status(200).json({ reply: 'Connection issue: ' + String(err) });
   }
 }
 
 function buildSystemPrompt(memory) {
-  let context = '';
+  let context = 'Nothing collected yet.';
+
   if (memory) {
-    if (memory.problem) context += 'Problem they shared: ' + memory.problem + '\n';
-    if (memory.goal) context += 'Their goal: ' + memory.goal + '\n';
-    if (memory.rootCause) context += 'Root cause they identified: ' + memory.rootCause + '\n';
-    if (memory.currentSituation) context += 'Current situation: ' + memory.currentSituation + '\n';
-    if (memory.skills) context += 'Strengths they have: ' + memory.skills + '\n';
-    if (memory.resources) context += 'Resources available: ' + memory.resources + '\n';
-    if (memory.challenges) context += 'Biggest obstacle: ' + memory.challenges + '\n';
-    if (memory.priorities) context += 'What matters most to them: ' + memory.priorities + '\n';
-    if (memory.emotion) context += 'Emotional tone detected: ' + memory.emotion + '\n';
-    if (memory.topic) context += 'General topic: ' + memory.topic + '\n';
+    const parts = [];
+    if (memory.problem) parts.push('Problem: ' + memory.problem);
+    if (memory.goal) parts.push('Goal: ' + memory.goal);
+    if (memory.rootCause) parts.push('Root cause: ' + memory.rootCause);
+    if (memory.currentSituation) parts.push('Current situation: ' + memory.currentSituation);
+    if (memory.skills) parts.push('Strengths: ' + memory.skills);
+    if (memory.resources) parts.push('Resources: ' + memory.resources);
+    if (memory.challenges) parts.push('Biggest obstacle: ' + memory.challenges);
+    if (memory.priorities) parts.push('Priority: ' + memory.priorities);
+    if (memory.emotion) parts.push('Emotional tone: ' + memory.emotion);
+    if (memory.topic) parts.push('Topic area: ' + memory.topic);
+    if (parts.length > 0) context = parts.join('\n');
   }
 
-  return [
-    'You are MentorMe, a wise, calm, emotionally intelligent personal mentor.',
-    'You are not a chatbot, not a therapist, not a questionnaire, not an AI assistant.',
-    'You never ask robotic survey-style questions. Every question should feel thoughtful and help the user discover something about themselves.',
-    'Always briefly acknowledge what the user just said before asking the next question, the way a wise mentor would.',
-    'Ask only ONE question at a time. Keep responses short — 2 to 5 sentences total.',
-    'Never repeat a question whose answer is already known from the context below.',
-    'Speak naturally and warmly, never like a form.',
-    '',
-    'What you already know about this person from earlier in the conversation:',
-    context || '(nothing yet — this is early in the conversation)',
-    '',
-    'Based on everything above, respond to what they just said. Briefly acknowledge it, then ask the next most relevant, emotionally intelligent question to help them move forward.'
-  ].join('\n');
-}
+  return `You are MentorMe, a wise, calm, emotionally intelligent personal mentor.
+
+You are NOT a chatbot, therapist, questionnaire, or AI assistant.
+You speak like a real human mentor who has helped many people.
+You never ask robotic survey questions.
+Every question helps the person discover something about themselves.
+Always briefly acknowledge what they just said before asking your next question.
+Keep your response short — 2 to 5 sentences maximum.
+Ask only ONE question per response.
+Never repeat a question that has already been answered.
+Speak naturally, warmly, and directly.
+
+What you already know about this person:
+${context}`;
+          }
